@@ -1,15 +1,27 @@
-<div class="container">
+<div class="container" [class.search-performed]="searchPerformed">
   <header>
-    <img src="assets/icon.ico" alt="Oxide Logo" class="logo">
-    <h1>{{ title }}</h1>
-    <div class="search-bar">
-      <input type="text" placeholder="Search with Oxide">
-      <button>Search</button>
+    <div class="header-content">
+      <img src="assets/icon.ico" alt="Oxide Logo" class="logo">
+      <h1 *ngIf="!searchPerformed" class="title-main">{{ title }}</h1>
+      <div class="search-bar">
+        <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search with Oxide">
+        <button (click)="onSearch()">Search</button>
+      </div>
     </div>
   </header>
-  <main>
+
+  <main *ngIf="searchPerformed">
     <div class="results">
-      <!-- Search results will be displayed here -->
+      <div *ngFor="let result of searchResults" class="result-item">
+        <a [href]="result.url" target="_blank" class="result-link">
+          <span class="result-url">{{ result.url }}</span>
+          <h3 class="result-title">{{ result.title }}</h3>
+        </a>
+        <p class="result-snippet">{{ result.content }}</p>
+      </div>
+      <div *ngIf="searchResults.length === 0" class="no-results">
+        <p>No results found for "{{searchQuery}}".</p>
+      </div>
     </div>
   </main>
 </div>
