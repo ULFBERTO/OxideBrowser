@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "OxideBrowser": {
+    "Oxide": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/oxide-browser",
+            "outputPath": "dist/oxide",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -26,6 +26,7 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets/icon.ico",
               {
                 "glob": "**/*",
                 "input": "public"
@@ -64,10 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "OxideBrowser:build:production"
+              "buildTarget": "Oxide:build:production"
             },
             "development": {
-              "buildTarget": "OxideBrowser:build:development"
+              "buildTarget": "Oxide:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -85,6 +86,7 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets/icon.ico",
               {
                 "glob": "**/*",
                 "input": "public"
