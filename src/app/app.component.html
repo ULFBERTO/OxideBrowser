@@ -1,27 +1,341 @@
-<div class="container" [class.search-performed]="searchPerformed">
-  <header>
+<div class="oxide-app" [class.search-active]="searchPerformed">
+  <!-- Header -->
+  <header class="header" [class.compact]="searchPerformed">
     <div class="header-content">
-      <img src="assets/icon.ico" alt="Oxide Logo" class="logo">
-      <h1 *ngIf="!searchPerformed" class="title-main">{{ title }}</h1>
-      <div class="search-bar">
-        <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search with Oxide">
-        <button (click)="onSearch()">Search</button>
+      <div class="logo-section" (click)="goHome()">
+        <img src="assets/icon.ico" alt="Oxide" class="logo">
+        <span class="logo-text" *ngIf="!searchPerformed">Oxide</span>
+      </div>
+
+      <div class="search-container">
+        <div class="search-box" [class.focused]="searchFocused">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery" 
+            (keyup.enter)="onSearch()"
+            (focus)="searchFocused = true"
+            (blur)="searchFocused = false"
+            placeholder="Search the web with Oxide..."
+            class="search-input"
+          >
+          <button class="ai-toggle" [class.active]="aiMode" (click)="toggleAiMode()" title="AI Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+              <circle cx="7.5" cy="14.5" r="1.5"/>
+              <circle cx="16.5" cy="14.5" r="1.5"/>
+            </svg>
+          </button>
+          <button class="search-btn" (click)="onSearch()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" *ngIf="searchPerformed">
+          <button 
+            *ngFor="let tab of tabs" 
+            class="nav-tab" 
+            [class.active]="activeTab === tab.id"
+            (click)="setActiveTab(tab.id)"
+          >
+            <span class="tab-icon" [innerHTML]="tab.icon"></span>
+            {{ tab.label }}
+          </button>
+        </nav>
+      </div>
+
+      <div class="header-actions">
+        <button class="action-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
 
-  <main *ngIf="searchPerformed">
-    <div class="results">
-      <div *ngFor="let result of searchResults" class="result-item">
-        <a [href]="result.url" target="_blank" class="result-link">
-          <span class="result-url">{{ result.url }}</span>
-          <h3 class="result-title">{{ result.title }}</h3>
-        </a>
-        <p class="result-snippet">{{ result.content }}</p>
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Home State -->
+    <div class="home-state" *ngIf="!searchPerformed">
+      <h1 class="hero-title">
+        <span class="gradient-text">Discover</span> the Web
+      </h1>
+      <p class="hero-subtitle">Fast, intelligent, and private search powered by AI</p>
+
+      <!-- Quick Access Cards -->
+      <div class="quick-access">
+        <div class="quick-card" *ngFor="let card of quickCards" (click)="quickSearch(card.query)">
+          <span class="quick-icon" [innerHTML]="card.icon"></span>
+          <span class="quick-label">{{ card.label }}</span>
+        </div>
       </div>
-      <div *ngIf="searchResults.length === 0" class="no-results">
-        <p>No results found for "{{searchQuery}}".</p>
+
+      <!-- Trending Section -->
+      <section class="trending-section">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+          Trending Now
+        </h2>
+        <div class="trending-grid">
+          <div class="trending-item" *ngFor="let item of trendingItems; let i = index" (click)="quickSearch(item)">
+            <span class="trending-rank">{{ i + 1 }}</span>
+            <span class="trending-text">{{ item }}</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Search Results State -->
+    <div class="search-state" *ngIf="searchPerformed">
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="loader">
+          <div class="loader-ring"></div>
+          <span>Searching...</span>
+        </div>
+      </div>
+
+      <!-- AI Mode Results -->
+      <div class="ai-results" *ngIf="aiMode && !isLoading && activeTab === 'all'">
+        <div class="ai-card">
+          <div class="ai-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+            </svg>
+            <span>Oxide AI</span>
+          </div>
+          <div class="ai-content">
+            <p *ngIf="aiResponse">{{ aiResponse }}</p>
+            <div class="ai-typing" *ngIf="aiLoading">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All Results Tab -->
+      <div class="results-container" *ngIf="activeTab === 'all' && !isLoading">
+        <div class="results-main">
+          <div class="result-item animate-fadeIn" *ngFor="let result of searchResults; let i = index" [style.animation-delay]="i * 50 + 'ms'">
+            <div class="result-source">
+              <img [src]="getFavicon(result.url)" class="result-favicon" (error)="onFaviconError($event)">
+              <span class="result-domain">{{ getDomain(result.url) }}</span>
+            </div>
+            <a [href]="result.url" target="_blank" class="result-title">{{ result.title }}</a>
+            <p class="result-snippet">{{ result.content | slice:0:200 }}...</p>
+          </div>
+
+          <div class="no-results" *ngIf="searchResults.length === 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+              <path d="M8 8l6 6M14 8l-6 6"/>
+            </svg>
+            <h3>No results found</h3>
+            <p>Try different keywords or check your spelling</p>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="results-sidebar" *ngIf="searchResults.length > 0">
+          <div class="sidebar-card">
+            <h4>Related Searches</h4>
+            <div class="related-item" *ngFor="let related of relatedSearches" (click)="quickSearch(related)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              {{ related }}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Images Tab -->
+      <div class="images-container" *ngIf="activeTab === 'images' && !isLoading">
+        <div class="images-header">
+          <span class="images-count">{{ allImageResults.length }} images found</span>
+        </div>
+        
+        <div class="masonry-grid">
+          <div 
+            class="masonry-item" 
+            [class]="getImageSize(i)"
+            *ngFor="let img of imageResults; let i = index" 
+            (click)="openImage(img)"
+          >
+            <img [src]="img.thumbnailUrl" [alt]="img.title" loading="lazy">
+            <div class="image-overlay">
+              <span class="image-title">{{ img.title }}</span>
+              <span class="image-source">{{ img.source }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalImagePages > 1">
+          <button 
+            class="page-btn" 
+            [disabled]="currentImagePage === 1"
+            (click)="prevImagePage()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          
+          <button 
+            *ngFor="let page of getImagePages()" 
+            class="page-btn page-number"
+            [class.active]="page === currentImagePage"
+            (click)="goToImagePage(page)"
+          >
+            {{ page }}
+          </button>
+          
+          <button 
+            class="page-btn" 
+            [disabled]="currentImagePage === totalImagePages"
+            (click)="nextImagePage()"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="no-results" *ngIf="imageResults.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <h3>No images found</h3>
+          <p>Try a different search term</p>
+        </div>
+      </div>
+
+      <!-- Videos Tab -->
+      <div class="videos-container" *ngIf="activeTab === 'videos' && !isLoading">
+        <div class="videos-grid">
+          <div class="video-item" *ngFor="let video of videoResults">
+            <div class="video-thumbnail">
+              <img [src]="video.thumbnailUrl" [alt]="video.title">
+              <span class="video-duration">{{ video.duration }}</span>
+              <div class="video-play">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+              </div>
+            </div>
+            <div class="video-info">
+              <h4 class="video-title">{{ video.title }}</h4>
+              <span class="video-channel">{{ video.channel }}</span>
+              <span class="video-meta">{{ video.views }} views • {{ video.publishedAt }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="no-results" *ngIf="videoResults.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+          </svg>
+          <h3>No videos found</h3>
+          <p>Try a different search term</p>
+        </div>
+      </div>
+
+      <!-- News Tab -->
+      <div class="news-container" *ngIf="activeTab === 'news' && !isLoading">
+        <div class="news-list">
+          <article class="news-item" *ngFor="let news of newsResults">
+            <div class="news-image" *ngIf="news.imageUrl">
+              <img [src]="news.imageUrl" [alt]="news.title">
+            </div>
+            <div class="news-content">
+              <div class="news-source">
+                <span class="source-name">{{ news.source }}</span>
+                <span class="news-time">{{ news.publishedAt }}</span>
+              </div>
+              <h3 class="news-title">
+                <a [href]="news.url" target="_blank">{{ news.title }}</a>
+              </h3>
+              <p class="news-description">{{ news.description }}</p>
+            </div>
+          </article>
+        </div>
+        <div class="no-results" *ngIf="newsResults.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+            <path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/>
+          </svg>
+          <h3>No news found</h3>
+          <p>Try a different search term</p>
+        </div>
+      </div>
+
+      <!-- Events Tab -->
+      <div class="events-container" *ngIf="activeTab === 'events' && !isLoading">
+        <div class="events-list">
+          <div class="event-item" *ngFor="let event of eventResults">
+            <div class="event-date">
+              <span class="event-month">{{ event.month }}</span>
+              <span class="event-day">{{ event.day }}</span>
+            </div>
+            <div class="event-details">
+              <h4 class="event-title">{{ event.title }}</h4>
+              <p class="event-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                {{ event.location }}
+              </p>
+              <p class="event-time">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {{ event.time }}
+              </p>
+            </div>
+            <button class="event-action btn btn-secondary">View Details</button>
+          </div>
+        </div>
+        <div class="no-results" *ngIf="eventResults.length === 0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <h3>No events found</h3>
+          <p>Try a different search term</p>
+        </div>
       </div>
     </div>
   </main>
+
+  <!-- Footer -->
+  <footer class="footer" *ngIf="!searchPerformed">
+    <div class="footer-content">
+      <span>© 2024 Oxide Browser</span>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">About</a>
+      </div>
+    </div>
+  </footer>
 </div>
