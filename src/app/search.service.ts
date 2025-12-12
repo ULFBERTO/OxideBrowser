@@ -62,9 +62,9 @@ export interface AiResponse {
   providedIn: 'root'
 })
 export class SearchService {
-  private apiUrl = 'http://localhost:5058/api';
+  private apiUrl = 'https://www.OxideBrowserBack.somee.com/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   search(query: string): Observable<SearchResult[]> {
     return this.http.post<SearchResult[]>(`${this.apiUrl}/search`, { query }).pipe(
