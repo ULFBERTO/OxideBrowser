@@ -196,7 +196,7 @@
           </button>
           
           <button 
-            *ngFor="let page of getImagePages()" 
+            *ngFor="let page of imagePages" 
             class="page-btn page-number"
             [class.active]="page === currentImagePage"
             (click)="goToImagePage(page)"

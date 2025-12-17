@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
   currentImagePage = 1;
   imagesPerPage = 20;
   totalImagePages = 1;
+  imagePages: number[] = [];
   newsResults: NewsResult[] = [];
   eventResults: EventResult[] = [];
   searchQuery = '';
@@ -199,6 +200,23 @@ export class AppComponent implements OnInit {
     const start = (this.currentImagePage - 1) * this.imagesPerPage;
     const end = start + this.imagesPerPage;
     this.imageResults = this.allImageResults.slice(start, end);
+    this.updateImagePages();
+  }
+
+  private updateImagePages() {
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let start = Math.max(1, this.currentImagePage - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalImagePages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    this.imagePages = pages;
   }
 
   nextImagePage() {
@@ -222,21 +240,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  getImagePages(): number[] {
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let start = Math.max(1, this.currentImagePage - Math.floor(maxVisible / 2));
-    let end = Math.min(this.totalImagePages, start + maxVisible - 1);
-    
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
+
 
   getImageSize(index: number): string {
     // Create varied sizes for masonry effect
