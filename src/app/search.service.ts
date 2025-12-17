@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 
 export interface SearchResult {
   id: number;
@@ -67,7 +67,8 @@ export class SearchService {
   constructor(private http: HttpClient) { }
 
   search(query: string): Observable<SearchResult[]> {
-    return this.http.post<SearchResult[]>(`${this.apiUrl}/search`, { query }).pipe(
+    return this.http.post<{ query: string; results: SearchResult[] }>(`${this.apiUrl}/search`, { query }).pipe(
+      map(response => response.results || []),
       catchError(() => of([]))
     );
   }
